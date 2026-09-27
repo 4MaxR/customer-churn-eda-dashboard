@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Churn Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+<style>
+:root {
+  --bg-primary: #f4f5f7;
+  --bg-card: #ffffff;
+  --bg-header: #1a1a2e;
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-on-dark: #ffffff;
+  --color-1: #4C72B0;
+  --color-2: #DD8452;
+  --color-3: #55A868;
+  --color-4: #C44E52;
+  --color-5: #8172B3;
+  --color-6: #937860;
+  --positive: #28a745;
+  --negative: #dc3545;
+  --warn-bg: #fff8e1;
+  --warn-border: #f0ad4e;
+  --gap: 16px;
+  --radius: 10px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+.dashboard-container { max-width: 1400px; margin: 0 auto; padding: var(--gap); }
+.dashboard-header {
+  background: linear-gradient(135deg, #1a1a2e 0%, #26263f 100%);
+  color: var(--text-on-dark);
+  padding: 22px 26px;
+  border-radius: var(--radius);
+  margin-bottom: var(--gap);
+}
+.dashboard-header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.dashboard-header p { font-size: 13px; color: rgba(255,255,255,0.7); }
+
+.callout {
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-border);
+  border-left: 5px solid var(--warn-border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: var(--gap);
+  font-size: 13.5px;
+}
+.callout strong { color: #8a5a00; }
+.callout code { background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: var(--gap);
+  margin-bottom: var(--gap);
+}
+.kpi-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.kpi-label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.kpi-value { font-size: 26px; font-weight: 700; }
+.kpi-sub { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+.chart-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: var(--gap); margin-bottom: var(--gap); }
+.chart-row.two-col { grid-template-columns: repeat(2, 1fr); }
+.chart-container {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.chart-container h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.chart-container .desc { font-size: 12px; color: var(--text-secondary); margin-bottom: 14px; }
+.chart-container canvas { max-height: 300px; }
+.chart-container.tall canvas { max-height: 340px; }
+
+.rule-panel {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  margin-bottom: var(--gap);
+}
+.rule-panel h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+.rule-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 14px; }
+.rule-item {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: #fafbfc;
+}
+.rule-item .thresh { font-weight: 700; font-size: 13px; color: var(--color-4); }
+.rule-item .note { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+.rule-compare { display:flex; gap: var(--gap); margin-top: 16px; flex-wrap: wrap; }
+.rule-compare .box { flex:1; min-width: 220px; border-radius: 8px; padding: 14px 16px; }
+.rule-compare .box.high { background: #fdecea; }
+.rule-compare .box.low { background: #eaf6ec; }
+.rule-compare .box .rate { font-size: 22px; font-weight: 700; }
+.rule-compare .box .lbl { font-size: 12px; color: var(--text-secondary); }
+
+.dashboard-footer { text-align:center; font-size: 12px; color: var(--text-secondary); padding: 16px 0; }
+
+@media (max-width: 900px) {
+  .chart-row.two-col { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <h1>Customer Churn Dashboard</h1>
+    <p>customer_churn_dataset-training-master.csv &middot; 440,832 customers analyzed</p>
+  </header>
+
+  <div class="callout">
+    <strong>Key finding:</strong> Churn in this dataset is largely <strong>rule-driven</strong>, not gradual. Any customer with a <code>Monthly</code> contract, <code>Age ≥ 55</code>, <code>Support Calls ≥ 6</code>, or <code>Payment Delay ≥ 21 days</code> churns at essentially <strong>100%</strong>. Customers who trigger none of these thresholds churn at only <strong>~17%</strong>. See the "Rule-Driven Thresholds" panel below.
+  </div>
+
+  <section class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Customers</div>
+      <div class="kpi-value" id="kpi-total">-</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Churn Rate</div>
+      <div class="kpi-value" id="kpi-churn-rate">-</div>
+      <div class="kpi-sub" id="kpi-churn-sub"></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Retained Customers</div>
+      <div class="kpi-value" id="kpi-retained">-</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Avg. Total Spend</div>
+      <div class="kpi-value" id="kpi-spend">-</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Avg. Support Calls</div>
+      <div class="kpi-value" id="kpi-calls">-</div>
+    </div>
+  </section>
+
+  <section class="rule-panel">
+    <h3>Rule-Driven Churn Thresholds</h3>
+    <div class="rule-grid">
+      <div class="rule-item"><div class="thresh">Contract Length = Monthly</div><div class="note">87,104 customers &middot; 100% churn</div></div>
+      <div class="rule-item"><div class="thresh">Age ≥ 55</div><div class="note">54,425 customers &middot; 100% churn</div></div>
+      <div class="rule-item"><div class="thresh">Support Calls ≥ 6</div><div class="note">94,613 customers &middot; 100% churn</div></div>
+      <div class="rule-item"><div class="thresh">Payment Delay ≥ 21 days</div><div class="note">84,030 customers &middot; 100% churn</div></div>
+    </div>
+    <div class="rule-compare">
+      <div class="box high">
+        <div class="rate" id="rule-high-rate">-</div>
+        <div class="lbl" id="rule-high-lbl">Customers hitting ≥1 threshold above</div>
+      </div>
+      <div class="box low">
+        <div class="rate" id="rule-low-rate">-</div>
+        <div class="lbl" id="rule-low-lbl">Customers hitting none of the thresholds</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chart-row two-col">
+    <div class="chart-container">
+      <h3>Churn Rate by Contract Length</h3>
+      <div class="desc">Monthly contracts churn at 100% vs. ~46% for Annual/Quarterly</div>
+      <canvas id="chart-contract"></canvas>
+    </div>
+    <div class="chart-container">
+      <h3>Churn Rate by Age Group</h3>
+      <div class="desc">55-65 age band churns at 100%</div>
+      <canvas id="chart-age"></canvas>
+    </div>
+  </section>
+
+  <section class="chart-row two-col">
+    <div class="chart-container">
+      <h3>Churn Rate by Support Calls</h3>
+      <div class="desc">Risk climbs sharply from 3 calls onward; 6+ always churns</div>
+      <canvas id="chart-support"></canvas>
+    </div>
+    <div class="chart-container">
+      <h3>Churn Rate by Payment Delay (days)</h3>
+      <div class="desc">Flat ~46% until 21+ days, then jumps to 100%</div>
+      <canvas id="chart-delay"></canvas>
+    </div>
+  </section>
+
+  <section class="chart-row two-col">
+    <div class="chart-container">
+      <h3>Churn Rate by Gender</h3>
+      <div class="desc">Female customers churn notably more than Male</div>
+      <canvas id="chart-gender"></canvas>
+    </div>
+    <div class="chart-container">
+      <h3>Churn Rate by Subscription Type</h3>
+      <div class="desc">Basic / Standard / Premium show little difference</div>
+      <canvas id="chart-subscription"></canvas>
+    </div>
+  </section>
+
+  <section class="chart-row">
+    <div class="chart-container tall" style="grid-column: span 2;">
+      <h3>Total Spend Distribution: Retained vs. Churned</h3>
+      <div class="desc">Retained customers never fall below $500 spend; churned customers span the full $100-1000 range</div>
+      <canvas id="chart-spend"></canvas>
+    </div>
+  </section>
+
+  <section class="chart-row">
+    <div class="chart-container tall" style="grid-column: span 2;">
+      <h3>Correlation of Numeric Features with Churn</h3>
+      <div class="desc">Support Calls and Total Spend are the strongest linear correlates</div>
+      <canvas id="chart-corr"></canvas>
+    </div>
+  </section>
+
+  <footer class="dashboard-footer">
+    Data source: customer_churn_dataset-training-master.csv &middot; Generated with Claude Code
+  </footer>
+</div>
+
+<script>
+const DATA = {"kpis": {"total_customers": 440832, "churn_rate": 0.5671071972996515, "churned": 249999, "retained": 190833, "avg_total_spend": 631.6162227787457, "avg_support_calls": 3.6044366107723578}, "by_contract": [{"label": "Annual", "rate": 0.4607614081423041, "count": 177198}, {"label": "Monthly", "rate": 1.0, "count": 87104}, {"label": "Quarterly", "rate": 0.4602560471307993, "count": 176530}], "by_gender": [{"label": "Female", "rate": 0.6666911533214398, "count": 190580}, {"label": "Male", "rate": 0.4912688010485431, "count": 250252}], "by_subscription": [{"label": "Basic", "rate": 0.5817823332820606, "count": 143026}, {"label": "Premium", "rate": 0.5594169951169642, "count": 148678}, {"label": "Standard", "rate": 0.5606995332868409, "count": 149128}], "by_age": [{"label": "18-25", "rate": 0.564254984189026, "count": 73683}, {"label": "26-35", "rate": 0.4912110500633957, "count": 104108}, {"label": "36-45", "rate": 0.42800199302441455, "count": 118413}, {"label": "46-54", "rate": 0.5784508275777968, "count": 90203}, {"label": "55-65", "rate": 1.0, "count": 54425}], "by_support_calls": [{"label": "0.0", "rate": 0.30282647584973166, "count": 69875}, {"label": "1.0", "rate": 0.3036300305141344, "count": 69476}, {"label": "2.0", "rate": 0.3155127608117649, "count": 66571}, {"label": "3.0", "rate": 0.4164311858749455, "count": 52729}, {"label": "4.0", "rate": 0.5849806451612903, "count": 38750}, {"label": "5.0", "rate": 0.9471466409824223, "count": 24918}, {"label": "6.0", "rate": 1.0, "count": 23554}, {"label": "7.0", "rate": 1.0, "count": 23870}, {"label": "8.0", "rate": 1.0, "count": 23559}, {"label": "9.0", "rate": 1.0, "count": 23630}, {"label": "10.0", "rate": 1.0, "count": 23900}], "by_payment_delay_bucket": [{"label": "0-5", "rate": 0.4644765115224634, "count": 101454}, {"label": "6-10", "rate": 0.46586392744684113, "count": 84793}, {"label": "11-15", "rate": 0.4658120157530004, "count": 85571}, {"label": "16-20", "rate": 0.46460510213687284, "count": 84984}, {"label": "21-25", "rate": 1.0, "count": 42134}, {"label": "26-30", "rate": 1.0, "count": 41896}], "spend_hist": {"bins": ["100-150", "150-200", "200-250", "250-300", "300-350", "350-400", "400-450", "450-500", "500-550", "550-600", "600-650", "650-700", "700-750", "750-800", "800-850", "850-900", "900-950", "950-1000"], "retained": [0, 0, 0, 0, 0, 0, 0, 0, 19017, 19152, 19017, 19144, 19088, 19100, 19151, 19123, 19042, 18999], "churned": [14312, 14393, 14641, 14419, 14416, 14454, 14800, 14361, 13628, 13391, 13307, 13282, 13541, 13612, 13402, 13148, 13500, 13392]}, "correlations": [{"feature": "Support Calls", "corr": 0.5742671326590044}, {"feature": "Payment Delay", "corr": 0.31212927574132066}, {"feature": "Age", "corr": 0.21839391857714757}, {"feature": "Last Interaction", "corr": 0.14961599724951039}, {"feature": "Usage Frequency", "corr": -0.04610092284992935}, {"feature": "Tenure", "corr": -0.05191895648088395}, {"feature": "Total Spend", "corr": -0.4293548243215598}], "rule_coverage": {"rule_rows": 211165, "rule_churn_rate": 1.0, "rest_rows": 229667, "rest_churn_rate": 0.16908828869624282}};
+
+const COLORS = ['#4C72B0','#DD8452','#55A868','#C44E52','#8172B3','#937860'];
+
+function pct(v) { return (v*100).toFixed(1) + '%'; }
+function num(v) { return Math.round(v).toLocaleString(); }
+function money(v) { return '$' + Math.round(v).toLocaleString(); }
+
+document.getElementById('kpi-total').textContent = num(DATA.kpis.total_customers);
+document.getElementById('kpi-churn-rate').textContent = pct(DATA.kpis.churn_rate);
+document.getElementById('kpi-churn-sub').textContent = num(DATA.kpis.churned) + ' churned customers';
+document.getElementById('kpi-retained').textContent = num(DATA.kpis.retained);
+document.getElementById('kpi-spend').textContent = money(DATA.kpis.avg_total_spend);
+document.getElementById('kpi-calls').textContent = DATA.kpis.avg_support_calls.toFixed(2);
+
+document.getElementById('rule-high-rate').textContent = pct(DATA.rule_coverage.rule_churn_rate) + ' (' + num(DATA.rule_coverage.rule_rows) + ')';
+document.getElementById('rule-low-rate').textContent = pct(DATA.rule_coverage.rest_churn_rate) + ' (' + num(DATA.rule_coverage.rest_rows) + ')';
+
+Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+Chart.defaults.font.size = 12;
+
+function barChart(canvasId, labels, rates, counts, opts={}) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  return new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Churn Rate',
+        data: rates.map(r => r*100),
+        backgroundColor: opts.colors || COLORS[0] + 'CC',
+        borderColor: opts.colors || COLORS[0],
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (c) => `Churn rate: ${c.parsed.y.toFixed(1)}%`,
+            afterLabel: (c) => counts ? `n = ${counts[c.dataIndex].toLocaleString()}` : ''
+          }
+        }
+      },
+      scales: {
+        y: { beginAtZero: true, max: 100, ticks: { callback: (v) => v + '%' }, grid: { color: '#eee' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+barChart('chart-contract', DATA.by_contract.map(d=>d.label), DATA.by_contract.map(d=>d.rate), DATA.by_contract.map(d=>d.count), {colors: COLORS[1]+'CC'});
+barChart('chart-age', DATA.by_age.map(d=>d.label), DATA.by_age.map(d=>d.rate), DATA.by_age.map(d=>d.count), {colors: COLORS[3]+'CC'});
+barChart('chart-support', DATA.by_support_calls.map(d=>d.label), DATA.by_support_calls.map(d=>d.rate), DATA.by_support_calls.map(d=>d.count), {colors: COLORS[0]+'CC'});
+barChart('chart-delay', DATA.by_payment_delay_bucket.map(d=>d.label), DATA.by_payment_delay_bucket.map(d=>d.rate), DATA.by_payment_delay_bucket.map(d=>d.count), {colors: COLORS[4]+'CC'});
+barChart('chart-gender', DATA.by_gender.map(d=>d.label), DATA.by_gender.map(d=>d.rate), DATA.by_gender.map(d=>d.count), {colors: COLORS[2]+'CC'});
+barChart('chart-subscription', DATA.by_subscription.map(d=>d.label), DATA.by_subscription.map(d=>d.rate), DATA.by_subscription.map(d=>d.count), {colors: COLORS[5]+'CC'});
+
+// Spend distribution stacked bar
+new Chart(document.getElementById('chart-spend').getContext('2d'), {
+  type: 'bar',
+  data: {
+    labels: DATA.spend_hist.bins,
+    datasets: [
+      { label: 'Retained', data: DATA.spend_hist.retained, backgroundColor: COLORS[2]+'CC', borderRadius: 3 },
+      { label: 'Churned', data: DATA.spend_hist.churned, backgroundColor: COLORS[3]+'CC', borderRadius: 3 },
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', labels: { usePointStyle: true } } },
+    scales: {
+      x: { title: { display: true, text: 'Total Spend ($)' }, grid: { display: false } },
+      y: { beginAtZero: true, title: { display: true, text: 'Customers' }, grid: { color: '#eee' } }
+    }
+  }
+});
+
+// Correlation horizontal bar
+const corrLabels = DATA.correlations.map(d=>d.feature);
+const corrVals = DATA.correlations.map(d=>d.corr);
+new Chart(document.getElementById('chart-corr').getContext('2d'), {
+  type: 'bar',
+  data: {
+    labels: corrLabels,
+    datasets: [{
+      data: corrVals,
+      backgroundColor: corrVals.map(v => v >= 0 ? COLORS[3]+'CC' : COLORS[0]+'CC'),
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: (c) => `r = ${c.parsed.x.toFixed(3)}` } }
+    },
+    scales: {
+      x: { min: -0.6, max: 0.6, grid: { color: '#eee' } },
+      y: { grid: { display: false } }
+    }
+  }
+});
+</script>
+</body>
+</html>
