@@ -50,11 +50,11 @@ tens of thousands of rows per rule. That is not the shape of organic customer
 behaviour; it is the signature of a **rule-generated (very likely synthetic)
 label**.
 
-| | Finding | Consequence |
-|---|---|---|
-| **1** | **Four independent thresholds each drive churn to 100%**: `Contract Length = Monthly` (87,104 rows), `Age ≥ 55` (54,425 rows), `Support Calls ≥ 6` (94,613 rows), `Payment Delay ≥ 21 days` (84,030 rows). | Churn is largely *deterministic*, not probabilistic, for ~48% of the base. A model doesn't need to learn a gradient here — it needs to learn a lookup table. |
-| **2** | **Customers who trigger none of the four thresholds churn at only 16.9%**, versus 100% for the 211,165 who trigger at least one. | The real predictive question is narrower than the raw correlations suggest: most of the apparent signal in `Age`, `Support Calls`, and `Payment Delay` is threshold behaviour, not a smooth trend. |
-| **3** | **Retained customers never fall below $500 in `Total Spend`**; churned customers range the full $100–1,000. `Total Spend` is the strongest single correlate after the rule features (r = −0.43). | A simple spend floor is almost as informative as some of the modelled features, and should be checked before any feature-engineering effort. |
+|       | Finding                                                                                                                                                                                                    | Consequence                                                                                                                                                                                        |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1** | **Four independent thresholds each drive churn to 100%**: `Contract Length = Monthly` (87,104 rows), `Age ≥ 55` (54,425 rows), `Support Calls ≥ 6` (94,613 rows), `Payment Delay ≥ 21 days` (84,030 rows). | Churn is largely _deterministic_, not probabilistic, for ~48% of the base. A model doesn't need to learn a gradient here — it needs to learn a lookup table.                                       |
+| **2** | **Customers who trigger none of the four thresholds churn at only 16.9%**, versus 100% for the 211,165 who trigger at least one.                                                                           | The real predictive question is narrower than the raw correlations suggest: most of the apparent signal in `Age`, `Support Calls`, and `Payment Delay` is threshold behaviour, not a smooth trend. |
+| **3** | **Retained customers never fall below $500 in `Total Spend`**; churned customers range the full $100–1,000. `Total Spend` is the strongest single correlate after the rule features (r = −0.43).           | A simple spend floor is almost as informative as some of the modelled features, and should be checked before any feature-engineering effort.                                                       |
 
 The remaining columns — `Usage Frequency`, `Tenure`, `Last Interaction`,
 `Subscription Type` — carry weak or negligible correlation with churn on their own.
@@ -69,24 +69,24 @@ The remaining columns — `Usage Frequency`, `Tenure`, `Last Interaction`,
 
 **Headline numbers**
 
-| Metric | Value |
-|---|---|
-| Rows in source file | 440,833 |
-| Fully blank rows removed | 1 |
-| Rows analyzed | 440,832 |
-| Duplicate `CustomerID`s | 0 |
-| Missing values (after blank-row removal) | 0 |
-| Overall churn rate | 56.71% (249,999 churned / 190,833 retained) |
-| Rule-triggered rows (≥1 of the 4 thresholds) | 211,165 (47.9%) — 100% churn |
-| Non-rule rows | 229,667 (52.1%) — 16.9% churn |
-| Strongest correlate | `Support Calls`, r = 0.574 |
-| Strongest negative correlate | `Total Spend`, r = −0.429 |
+| Metric                                       | Value                                       |
+| -------------------------------------------- | ------------------------------------------- |
+| Rows in source file                          | 440,833                                     |
+| Fully blank rows removed                     | 1                                           |
+| Rows analyzed                                | 440,832                                     |
+| Duplicate `CustomerID`s                      | 0                                           |
+| Missing values (after blank-row removal)     | 0                                           |
+| Overall churn rate                           | 56.71% (249,999 churned / 190,833 retained) |
+| Rule-triggered rows (≥1 of the 4 thresholds) | 211,165 (47.9%) — 100% churn                |
+| Non-rule rows                                | 229,667 (52.1%) — 16.9% churn               |
+| Strongest correlate                          | `Support Calls`, r = 0.574                  |
+| Strongest negative correlate                 | `Total Spend`, r = −0.429                   |
 
 ---
 
 ## The Business Problem
 
-The brief was open-ended: *"analyse this churn dataset."* That framing hides a
+The brief was open-ended: _"analyse this churn dataset."_ That framing hides a
 choice — do you jump straight to feature engineering and a classifier, or do you
 first establish **what kind of dataset this actually is?**
 
@@ -114,8 +114,8 @@ this project.
 
 One CSV, ~22.4 MB, 440,833 rows, one row per customer.
 
-| Table | Grain | Rows | Key |
-|---|---|---|---|
+| Table                                        | Grain                | Rows                             | Key          |
+| -------------------------------------------- | -------------------- | -------------------------------- | ------------ |
 | `customer_churn_dataset-training-master.csv` | one row per customer | 440,833 (440,832 after cleaning) | `CustomerID` |
 
 ```mermaid
@@ -138,20 +138,20 @@ erDiagram
 
 **Column dictionary**
 
-| Column | Type | Notes |
-|---|---|---|
-| `CustomerID` | float | unique identifier, no duplicates found |
-| `Age` | float | 18–65 |
-| `Gender` | string | Male / Female |
-| `Tenure` | float | months as customer |
-| `Usage Frequency` | float | activity count |
-| `Support Calls` | float | 0–10; ≥6 always churns |
-| `Payment Delay` | float | 0–30 days; ≥21 always churns |
-| `Subscription Type` | string | Basic / Standard / Premium |
-| `Contract Length` | string | Monthly / Quarterly / Annual; Monthly always churns |
-| `Total Spend` | float | $100–$1,000; retained customers never below $500 |
-| `Last Interaction` | float | days since last interaction |
-| `Churn` | float | binary target, 0/1, 56.71% positive |
+| Column              | Type   | Notes                                               |
+| ------------------- | ------ | --------------------------------------------------- |
+| `CustomerID`        | float  | unique identifier, no duplicates found              |
+| `Age`               | float  | 18–65                                               |
+| `Gender`            | string | Male / Female                                       |
+| `Tenure`            | float  | months as customer                                  |
+| `Usage Frequency`   | float  | activity count                                      |
+| `Support Calls`     | float  | 0–10; ≥6 always churns                              |
+| `Payment Delay`     | float  | 0–30 days; ≥21 always churns                        |
+| `Subscription Type` | string | Basic / Standard / Premium                          |
+| `Contract Length`   | string | Monthly / Quarterly / Annual; Monthly always churns |
+| `Total Spend`       | float  | $100–$1,000; retained customers never below $500    |
+| `Last Interaction`  | float  | days since last interaction                         |
+| `Churn`             | float  | binary target, 0/1, 56.71% positive                 |
 
 ---
 
@@ -178,7 +178,7 @@ flowchart TD
   exact cliff edges (`Support Calls ≥ 6`, `Payment Delay ≥ 21`).
 - **Check for rule overlap before crediting any single feature.** Once multiple
   100%-churn thresholds were found, rows were re-partitioned into "trips ≥1 rule"
-  vs. "trips none" to see what churn looks like *after* removing the deterministic
+  vs. "trips none" to see what churn looks like _after_ removing the deterministic
   cases — this is the 16.9% figure, and it is the more honest baseline for judging
   the remaining features.
 
@@ -186,16 +186,16 @@ flowchart TD
 
 ## Findings Register
 
-| ID | Field(s) | Finding | Rows | % of data | Severity |
-|---|---|---|---|---|---|
-| **F-01** | `Contract Length` | `Monthly` → 100% churn, vs. ~46% for Annual/Quarterly | 87,104 | 19.8% | 🔴 Critical (rule) |
-| **F-02** | `Age` | `Age ≥ 55` → 100% churn | 54,425 | 12.3% | 🔴 Critical (rule) |
-| **F-03** | `Support Calls` | `Support Calls ≥ 6` → 100% churn; risk rises sharply from 3 calls | 94,613 | 21.5% | 🔴 Critical (rule) |
-| **F-04** | `Payment Delay` | `Payment Delay ≥ 21 days` → 100% churn; flat ~46% below 21 | 84,030 | 19.1% | 🔴 Critical (rule) |
-| **F-05** | `Total Spend` | Retained customers never fall below $500; strongest negative correlate (r = −0.429) | 440,832 | 100% | 🟠 High |
-| **F-06** | `Gender` | Female customers churn at 66.7% vs. Male at 49.1%, with no other variable explaining the gap | 440,832 | 100% | 🟡 Medium |
-| **F-07** | `Subscription Type` | Basic/Standard/Premium churn rates all sit within 2 points of each other (56–58%) | 440,832 | 100% | 🔵 Low |
-| **F-08** | *(whole file)* | One fully-blank row | 1 | <0.01% | 🔵 Low (cleaned) |
+| ID       | Field(s)            | Finding                                                                                      | Rows    | % of data | Severity           |
+| -------- | ------------------- | -------------------------------------------------------------------------------------------- | ------- | --------- | ------------------ |
+| **F-01** | `Contract Length`   | `Monthly` → 100% churn, vs. ~46% for Annual/Quarterly                                        | 87,104  | 19.8%     | 🔴 Critical (rule) |
+| **F-02** | `Age`               | `Age ≥ 55` → 100% churn                                                                      | 54,425  | 12.3%     | 🔴 Critical (rule) |
+| **F-03** | `Support Calls`     | `Support Calls ≥ 6` → 100% churn; risk rises sharply from 3 calls                            | 94,613  | 21.5%     | 🔴 Critical (rule) |
+| **F-04** | `Payment Delay`     | `Payment Delay ≥ 21 days` → 100% churn; flat ~46% below 21                                   | 84,030  | 19.1%     | 🔴 Critical (rule) |
+| **F-05** | `Total Spend`       | Retained customers never fall below $500; strongest negative correlate (r = −0.429)          | 440,832 | 100%      | 🟠 High            |
+| **F-06** | `Gender`            | Female customers churn at 66.7% vs. Male at 49.1%, with no other variable explaining the gap | 440,832 | 100%      | 🟡 Medium          |
+| **F-07** | `Subscription Type` | Basic/Standard/Premium churn rates all sit within 2 points of each other (56–58%)            | 440,832 | 100%      | 🔵 Low             |
+| **F-08** | _(whole file)_      | One fully-blank row                                                                          | 1       | <0.01%    | 🔵 Low (cleaned)   |
 
 ---
 
@@ -206,14 +206,14 @@ flowchart TD
 Cross-tabulating each numeric feature against `Churn` at fine granularity turned
 up four independent cliffs, each with **zero exceptions**:
 
-| Rule | Rows | Churn rate |
-|---|---|---|
-| `Contract Length == 'Monthly'` | 87,104 | 100.0% |
-| `Age >= 55` | 54,425 | 100.0% |
-| `Support Calls >= 6` | 94,613 | 100.0% |
-| `Payment Delay >= 21` | 84,030 | 100.0% |
-| **Any of the above (union)** | **211,165** | **100.0%** |
-| **None of the above** | **229,667** | **16.9%** |
+| Rule                           | Rows        | Churn rate |
+| ------------------------------ | ----------- | ---------- |
+| `Contract Length == 'Monthly'` | 87,104      | 100.0%     |
+| `Age >= 55`                    | 54,425      | 100.0%     |
+| `Support Calls >= 6`           | 94,613      | 100.0%     |
+| `Payment Delay >= 21`          | 84,030      | 100.0%     |
+| **Any of the above (union)**   | **211,165** | **100.0%** |
+| **None of the above**          | **229,667** | **16.9%**  |
 
 Because the union is still exactly 100%, and the complement is a plausible,
 noisy 16.9%, this reads as a **generation rule** rather than a coincidence of
@@ -225,15 +225,15 @@ extraordinary coincidence.
 
 Even below the `≥6` cliff, `Support Calls` shows a genuine, monotonic gradient:
 
-| Support Calls | Churn rate | Rows |
-|---|---|---|
-| 0 | 30.3% | 69,875 |
-| 1 | 30.4% | 69,476 |
-| 2 | 31.6% | 66,571 |
-| 3 | 41.6% | 52,729 |
-| 4 | 58.5% | 38,750 |
-| 5 | 94.7% | 24,918 |
-| **6+** | **100.0%** | 94,613 |
+| Support Calls | Churn rate | Rows   |
+| ------------- | ---------- | ------ |
+| 0             | 30.3%      | 69,875 |
+| 1             | 30.4%      | 69,476 |
+| 2             | 31.6%      | 66,571 |
+| 3             | 41.6%      | 52,729 |
+| 4             | 58.5%      | 38,750 |
+| 5             | 94.7%      | 24,918 |
+| **6+**        | **100.0%** | 94,613 |
 
 The jump from 4 → 5 (58.5% → 94.7%) is the steepest non-rule transition in the
 dataset and is the single strongest linear correlate overall (r = 0.574).
@@ -265,14 +265,14 @@ these as primary drivers is likely fitting noise.
 
 ## What Is Actually Clean
 
-| Check | Result |
-|---|---|
-| Duplicate `CustomerID`s | ✅ 0 |
-| Fully null rows | ✅ 1 found, removed (0.0002% of file) |
-| Per-column missing values (post-cleaning) | ✅ 0 across all 12 columns |
-| Categorical hygiene (`Gender`, `Subscription Type`, `Contract Length`) | ✅ 2/3/3 well-formed values, no casing or whitespace variants |
-| Numeric ranges | ✅ `Age` 18–65, `Payment Delay` 0–30, `Total Spend` 100–1,000 — all plausible, no negative or out-of-range values |
-| `Churn` label | ✅ clean binary, no nulls, 56.71% base rate |
+| Check                                                                  | Result                                                                                                            |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Duplicate `CustomerID`s                                                | ✅ 0                                                                                                              |
+| Fully null rows                                                        | ✅ 1 found, removed (0.0002% of file)                                                                             |
+| Per-column missing values (post-cleaning)                              | ✅ 0 across all 12 columns                                                                                        |
+| Categorical hygiene (`Gender`, `Subscription Type`, `Contract Length`) | ✅ 2/3/3 well-formed values, no casing or whitespace variants                                                     |
+| Numeric ranges                                                         | ✅ `Age` 18–65, `Payment Delay` 0–30, `Total Spend` 100–1,000 — all plausible, no negative or out-of-range values |
+| `Churn` label                                                          | ✅ clean binary, no nulls, 56.71% base rate                                                                       |
 
 The file is structurally clean. The interesting problems here are not missing
 values or malformed rows — they are the label's rule-driven structure and the
@@ -305,7 +305,7 @@ any browser, offline.
 ## Limitations & Uncertainty
 
 - **No ground truth on data generation.** The rule structure is inferred from
-  the fact that four thresholds each produce *exactly* 0%/100% churn with no
+  the fact that four thresholds each produce _exactly_ 0%/100% churn with no
   exceptions. This is very strong circumstantial evidence of a synthetic or
   rule-augmented label, but the dataset's origin was not independently
   confirmed.
@@ -328,13 +328,13 @@ any browser, offline.
 
 Ordered by impact.
 
-| # | Action | Rationale |
-|---|---|---|
-| 1 | **Do not report aggregate correlations (e.g. `Age` r = 0.22) as smooth trends without first bucketing.** | Several features (`Age`, `Support Calls`, `Payment Delay`) are threshold effects, not gradients — the aggregate number understates how strong the real relationship is. |
-| 2 | **If a classifier is built on this data, evaluate it separately on the "rule-triggered" and "non-rule" subsets.** | A single aggregate accuracy/ROC-AUC number will be dominated by the 47.9% of rows that are deterministic, masking whether the model actually learned anything about the harder 16.9%-churn subset. |
-| 3 | **Treat the `Gender` churn gap as a flag for the data source, not a business insight**, unless corroborated by a second dataset. | An 18-point gap with no explanatory confound is exactly the kind of artifact synthetic data generators introduce. |
-| 4 | **Use `Total Spend ≥ $500` as a cheap retained-customer heuristic** when a fast rule-of-thumb is needed. | It's nearly as separating as some modelled features and requires no model at all. |
-| 5 | **If this dataset is used for teaching/practicing classification, say so explicitly.** | Its near-perfect separability makes it a poor proxy for real customer churn behaviour. |
+| #   | Action                                                                                                                           | Rationale                                                                                                                                                                                          |
+| --- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Do not report aggregate correlations (e.g. `Age` r = 0.22) as smooth trends without first bucketing.**                         | Several features (`Age`, `Support Calls`, `Payment Delay`) are threshold effects, not gradients — the aggregate number understates how strong the real relationship is.                            |
+| 2   | **If a classifier is built on this data, evaluate it separately on the "rule-triggered" and "non-rule" subsets.**                | A single aggregate accuracy/ROC-AUC number will be dominated by the 47.9% of rows that are deterministic, masking whether the model actually learned anything about the harder 16.9%-churn subset. |
+| 3   | **Treat the `Gender` churn gap as a flag for the data source, not a business insight**, unless corroborated by a second dataset. | An 18-point gap with no explanatory confound is exactly the kind of artifact synthetic data generators introduce.                                                                                  |
+| 4   | **Use `Total Spend ≥ $500` as a cheap retained-customer heuristic** when a fast rule-of-thumb is needed.                         | It's nearly as separating as some modelled features and requires no model at all.                                                                                                                  |
+| 5   | **If this dataset is used for teaching/practicing classification, say so explicitly.**                                           | Its near-perfect separability makes it a poor proxy for real customer churn behaviour.                                                                                                             |
 
 ---
 
@@ -392,15 +392,15 @@ sonnet_Customs_chrun/
 
 ## Skills This Project Demonstrates
 
-| Capability | Where it shows up |
-|---|---|
-| **Threshold / rule discovery** | Found four independent 100%-churn cliffs by bucketing and checking discrete values instead of trusting aggregate correlations |
-| **Correlation vs. causation discipline** | Distinguished `Age`'s misleading aggregate r = 0.22 (a cliff-edge) from `Support Calls`'s genuine monotonic gradient |
-| **Data quality triage** | Verified no duplicate keys, isolated and removed the one fully-blank row, confirmed all categorical and numeric ranges were well-formed |
-| **Segmentation analysis** | Re-partitioned the dataset into rule-triggered vs. non-rule subsets to get an honest baseline churn rate (16.9%) for the harder cases |
-| **Dashboard engineering** | Built a self-contained, offline-capable HTML/Chart.js dashboard with pre-aggregated data to stay performant at 440k+ source rows |
-| **Honest scoping** | Explicitly did not build a predictive model, and explained why doing so without first understanding the rule structure would be misleading |
-| **Reproducibility** | Every number in this README traces back to a runnable Python snippet |
+| Capability                               | Where it shows up                                                                                                                          |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Threshold / rule discovery**           | Found four independent 100%-churn cliffs by bucketing and checking discrete values instead of trusting aggregate correlations              |
+| **Correlation vs. causation discipline** | Distinguished `Age`'s misleading aggregate r = 0.22 (a cliff-edge) from `Support Calls`'s genuine monotonic gradient                       |
+| **Data quality triage**                  | Verified no duplicate keys, isolated and removed the one fully-blank row, confirmed all categorical and numeric ranges were well-formed    |
+| **Segmentation analysis**                | Re-partitioned the dataset into rule-triggered vs. non-rule subsets to get an honest baseline churn rate (16.9%) for the harder cases      |
+| **Dashboard engineering**                | Built a self-contained, offline-capable HTML/Chart.js dashboard with pre-aggregated data to stay performant at 440k+ source rows           |
+| **Honest scoping**                       | Explicitly did not build a predictive model, and explained why doing so without first understanding the rule structure would be misleading |
+| **Reproducibility**                      | Every number in this README traces back to a runnable Python snippet                                                                       |
 
 ---
 
@@ -410,6 +410,8 @@ sonnet_Customs_chrun/
 
 - Email: mustafa.elrouby1@gmail.com
 - GitHub: [github.com/4MaxR](https://github.com/4MaxR)
+- Portfolio: [mostafaalrouby.com](https://mostafaalrouby.com)
+- LinkedIn: [linkedin.com/in/mustafa-al-rouby-20218b171](https://www.linkedin.com/in/mustafa-al-rouby-20218b171)
 
 ---
 
