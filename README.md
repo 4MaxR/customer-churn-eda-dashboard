@@ -6,7 +6,7 @@
 [![pandas](https://img.shields.io/badge/pandas-2.x-150458?style=flat&logo=pandas&logoColor=white)](https://pandas.pydata.org/)
 [![NumPy](https://img.shields.io/badge/NumPy-2.x-013243?style=flat&logo=numpy&logoColor=white)](https://numpy.org/)
 [![Chart.js](https://img.shields.io/badge/Chart.js-4.5-FF6384?style=flat&logo=chart.js&logoColor=white)](https://www.chartjs.org/)
-[![Dashboard](https://img.shields.io/badge/Output-Interactive%20HTML-0A66C2?style=flat)](churn_dashboard.html)
+[![Dashboard](https://img.shields.io/badge/Live%20Dashboard-View%20Now-0A66C2?style=flat&logo=github&logoColor=white)](https://4maxr.github.io/customer-churn-eda-dashboard/)
 [![Data Quality](https://img.shields.io/badge/Focus-EDA%20%26%20Churn%20Drivers-2e7d5b?style=flat)](#findings-register)
 
 ---
@@ -33,7 +33,7 @@
 - [Skills This Project Demonstrates](#skills-this-project-demonstrates)
 - [Author](#author)
 
-**Other documents:** [Interactive dashboard](churn_dashboard.html)
+**Live dashboard:** [4maxr.github.io/customer-churn-eda-dashboard](https://4maxr.github.io/customer-churn-eda-dashboard/) · **Other documents:** [Dashboard source (churn_dashboard.html)](churn_dashboard.html)
 
 ---
 
@@ -282,9 +282,11 @@ unexplained demographic split.
 
 ## The Interactive Dashboard
 
-[`churn_dashboard.html`](churn_dashboard.html) is a single self-contained file
-(Chart.js via CDN, no build step, no server) that turns the findings above into
-an explorable view:
+**🔗 Live: [4maxr.github.io/customer-churn-eda-dashboard](https://4maxr.github.io/customer-churn-eda-dashboard/)**
+
+[`churn_dashboard.html`](churn_dashboard.html) (served via GitHub Pages as
+`index.html`) is a single self-contained file (Chart.js via CDN, no build step,
+no server) that turns the findings above into an explorable view:
 
 - KPI row: total customers, churn rate, retained count, avg. spend, avg. support
   calls
@@ -385,7 +387,8 @@ sonnet_Customs_chrun/
 ├── README.md                                     # this document
 ├── customer_churn_dataset-training-master.csv    # source data, 440,833 rows
 ├── dashboard_data.json                            # pre-aggregated summary data
-└── churn_dashboard.html                           # self-contained interactive dashboard
+├── churn_dashboard.html                           # self-contained interactive dashboard (source)
+└── index.html                                     # copy served live via GitHub Pages
 ```
 
 ---
